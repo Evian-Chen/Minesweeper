@@ -1,0 +1,12 @@
+.DS_Store
+*.xcuserdata
+*.xcuserstate
+*.xcworkspace
+DerivedData/
+build/
+*.pbxuser
+.idea/
+.vscode/
+Pods/
+*.xcuserstate
+.swiftpm/
