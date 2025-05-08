@@ -15,7 +15,21 @@ struct Cell {
     var curIndex: Int = 0
     var rowIndex: Int = 0
     var colIndex: Int = 0
+    var isMine: Bool = false
     var state: cellState = .hidden
+}
+
+struct cellView: View {
+    var cell: Cell
+    
+    var body: some View {
+        ZStack {
+            Rectangle()
+                .fill(.gray)
+                .frame(width: 25, height: 25)
+        }
+        .padding(5)
+    }
 }
 
 class GameBoard: ObservableObject {
@@ -44,19 +58,44 @@ class GameBoard: ObservableObject {
         self.mine = Int((Double(self.totalCell) * 0.1).rounded()) + 1 // avoid zero mine
         self.gameBoard = []  // in case reset
         for i in 0 ..< self.totalCell {
-            gameBoard.append(Cell(curIndex: i, rowIndex: i % self.row, colIndex: i % self.col))
+            gameBoard.append(Cell(curIndex: i, rowIndex: i / self.col, colIndex: i % self.col))
         }
     }
     
     // UI call this function when it meets the first click of this board
     // input row and col
     func firstClick(row: Int, col: Int) {
+        // generate mines
+        var mineRow = Int.random(in: 0 ..< self.row)
+        var mineCol = Int.random(in: 0 ..< self.col)
         
+        for i in 0 ..< self.totalCell {
+            while (mineRow == row && mineCol == col) {
+                var mineRow = Int.random(in: 0 ..< self.row)
+                var mineCol = Int.random(in: 0 ..< self.col)
+            }
+            
+            self.gameBoard[row * self.row + col * self.col].isMine = true
+            self.minePos.append( (mineRow, mineCol) )
+            
+            var mineRow = Int.random(in: 0 ..< self.row)
+            var mineCol = Int.random(in: 0 ..< self.col)
+        }
     }
     
-    // this function returns all mine positions
+    // getter function, this function returns all mine positions
     func getMinePos() -> [(Int, Int)] {
         return self.minePos
+    }
+    
+    // return the view of gameboard
+    @ViewBuilder
+    func makeBoardView() -> some View {
+        LazyVStack {
+            ForEach(0 ..< self.totalCell) { index in
+                cellView(cell: self.gameBoard[index])
+            }
+        }
     }
 }
 
@@ -89,10 +128,7 @@ struct ContentView: View {
         HStack {
             Button {
                 buildGame = true
-                if firstBuild {
-                    gameBoard.setUpBoard(row: row, col: col)
-                    firstBuild = false
-                }
+                gameBoard.setUpBoard(row: row, col: col)
             } label: {
                 Text("build game")
                     .padding()
@@ -112,6 +148,8 @@ struct ContentView: View {
                     .cornerRadius(10)
                     .padding(.horizontal)
             }
+            
+            gameBoard.makeBoardView()
         }
         
         if buildGame {
