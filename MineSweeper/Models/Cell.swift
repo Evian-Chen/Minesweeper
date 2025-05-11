@@ -18,8 +18,8 @@ class Cell: ObservableObject, Identifiable {
     /// Position on the game board
     var pos: Position
     
+    /// Sizes of the main game board
     var boardRow: Int
-    
     var boardCol: Int
     
     /// Number od surrounding mines
@@ -44,6 +44,10 @@ class Cell: ObservableObject, Identifiable {
         self.getAdjacentIndex(boardRow: boardRow, boardCol: boardCol)
     }
     
+    /// Compute all valid adjacent positions surrounding this cell and store in the adjacentPos, called when initilizing
+    /// - Parameters:
+    ///   - boardRow: total number of rows in the board
+    ///   - boardCol: total number of columns in the board
     func getAdjacentIndex(boardRow: Int, boardCol: Int) {
         let r = pos.row
         let c = pos.col

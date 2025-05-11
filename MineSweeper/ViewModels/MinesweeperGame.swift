@@ -138,6 +138,7 @@ class MinesweeperGame: ObservableObject {
         return self.minePos
     }
     
+    /// Just for dubugging
     func printAdjacent(pos: Position) {
         print("adjacent position of \(pos.row), \(pos.col):")
         for p in self.gameBoard[indexAt(pos: pos)].adjacentPos {
