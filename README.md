@@ -9,7 +9,7 @@ This repository contains a modular implementation of the classic **Minesweeper**
 1. Clone this repository:
    
   ```bash
-  git clone https://github.com/yourname/minesweeper-swiftui.git
+  git clone https://github.com/Evian-Chen/Minesweeper.git
   cd minesweeper-swiftui
   ```
 
