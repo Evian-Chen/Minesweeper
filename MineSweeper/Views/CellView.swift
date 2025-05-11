@@ -34,8 +34,12 @@ struct CellView: View {
                 .frame(width: 30, height: 30)
             
             // Show mine icon if revealed and the cell is a mine
-            if cell.state == .revealed && cell.isMine {
-                Text("X")
+            if cell.state == .revealed {
+                if cell.isMine {
+                    Text("X")
+                } else {
+                    Text(String(cell.adjacentMineCount))
+                }
             }
         }
         .onTapGesture {

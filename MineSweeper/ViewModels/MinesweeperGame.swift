@@ -41,7 +41,7 @@ class MinesweeperGame: ObservableObject {
     func initSize(row: Int, col: Int) {
         self.row = row
         self.col = col
-        self.mineCount = Int.random(in: 1 ..< max(row, col))
+        self.mineCount = Int.random(in: 1 ..< row * col)
         self.generateBoard()
     }
     
@@ -51,6 +51,8 @@ class MinesweeperGame: ObservableObject {
     func generateBoard() {
         for i in 0 ..< row * col {
             self.gameBoard.append(Cell(pos: Position(row: i / row, col: i % col),
+                                       boardRow: self.row,
+                                       boardCol: self.col,
                                        isMine: false,
                                        state: .hidden))
         }
@@ -67,8 +69,12 @@ class MinesweeperGame: ObservableObject {
             let ranC = Int.random(in: 0 ..< self.col)
             let pos = Position(row: ranR, col: ranC)
             if (pos != firstPos) {
-                self.minePos.insert(pos)
-                self.gameBoard[self.indexAt(pos: pos)].isMine = true
+                
+                // Make sure pos is inserted then update the adjacent mine count
+                if self.minePos.insert(pos).inserted {
+                    self.gameBoard[self.indexAt(pos: pos)].isMine = true
+                    self.updateAdjacentMineCount(curPos: pos)
+                }
             }
         }
     }
@@ -83,12 +89,29 @@ class MinesweeperGame: ObservableObject {
         let index = self.indexAt(pos: pos)
         
         if isFirstClick {
+            // Test, check positions of all mines
+            var _ = self.getMinePos()
+            
             self.generateMine(firstPos: pos)
         } else if self.gameBoard[index].isMine {
             // game over
         }
-    
+        
+        self.printAdjacent(pos: pos)
+        print("adjacent mine count: \(self.gameBoard[self.indexAt(pos: pos)].adjacentMineCount)")
+        print("all mine count: \(self.mineCount)")
+        
         self.gameBoard[index].state = .revealed
+    }
+    
+    /// Update the adjacent mine count after placing a mine at curPos
+    ///  - Parameters:
+    ///     - curPos: the current position of the placed mine
+    func updateAdjacentMineCount(curPos: Position) {
+        let cell = self.gameBoard[indexAt(pos: curPos)]
+        for pos in cell.adjacentPos {
+            self.gameBoard[indexAt(pos: pos)].adjacentMineCount += 1
+        }
     }
     
     /// Reset the entire game state and clear the board
@@ -109,8 +132,17 @@ class MinesweeperGame: ObservableObject {
     /// Return positions of all mines in the board
     func getMinePos() -> Set<Position> {
         // print here to debug
-        
+        for pos in self.minePos {
+            print("mine pos: \(pos.row), \(pos.col)")
+        }
         return self.minePos
+    }
+    
+    func printAdjacent(pos: Position) {
+        print("adjacent position of \(pos.row), \(pos.col):")
+        for p in self.gameBoard[indexAt(pos: pos)].adjacentPos {
+            print("\(p.row), \(p.col)")
+        }
     }
     
     /// return the full board
