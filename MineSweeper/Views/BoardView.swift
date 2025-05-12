@@ -29,7 +29,12 @@ struct BoardView: View {
                         // Render individual cell with tap handling
                         CellView(cell: MinesweeperGame.gameBoard[index]) {
                             MinesweeperGame.updateBoard(pos: Position(row: i, col: j),
-                                                        isFirstClick: isFirstClick)
+                                                        isFirstClick: isFirstClick, isLongPress: false)
+                            isFirstClick = false
+                        } longPressAction: {
+                            MinesweeperGame.updateBoard(pos: Position(row: i, col: j),
+                                                        isFirstClick: isFirstClick, isLongPress: true)
+                            // If the first click is long press, then still count it as the first click
                             isFirstClick = false
                         } // CellView
                     } // j

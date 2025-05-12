@@ -28,6 +28,8 @@ class MinesweeperGame: ObservableObject {
     /// The game board consisting of the Cell objects
     @Published var gameBoard: [Cell] = []
     
+    @Published var isGameOver: Bool = false
+    
     // MARK: - Initialization
     
     /// Default initializer with empty board
@@ -37,11 +39,12 @@ class MinesweeperGame: ObservableObject {
         self.mineCount = 0
     }
     
-    // Initialize the game board with rows and columns and place the mines
+    /// Initialize the game board with rows and columns and place the mines
     func initSize(row: Int, col: Int) {
         self.row = row
         self.col = col
-        self.mineCount = Int.random(in: 1 ..< row * col)
+//        self.mineCount = Int.random(in: 1 ..< row * col)
+        self.mineCount = 5  // Test
         self.generateBoard()
     }
     
@@ -85,7 +88,7 @@ class MinesweeperGame: ObservableObject {
     /// - Parameters:
     ///   - pos: the tapped position
     ///   - isFirstClick: true if this is the first move of the game
-    func updateBoard(pos: Position, isFirstClick: Bool) {
+    func updateBoard(pos: Position, isFirstClick: Bool, isLongPress: Bool) {
         let index = self.indexAt(pos: pos)
         
         if isFirstClick {
@@ -101,7 +104,21 @@ class MinesweeperGame: ObservableObject {
         print("adjacent mine count: \(self.gameBoard[self.indexAt(pos: pos)].adjacentMineCount)")
         print("all mine count: \(self.mineCount)")
         
-        self.gameBoard[index].state = .revealed
+        // Handle state change of long press
+        if isLongPress {
+            if self.gameBoard[index].state == .hidden {
+                self.gameBoard[index].state = .flagged
+            } else if self.gameBoard[index].state == .flagged {
+                self.gameBoard[index].state = .hidden
+            }
+        } else {  // click
+            self.gameBoard[index].state = .revealed
+            
+            // 如果這格0而且不是地雷，展開四周
+            if !self.gameBoard[index].isMine && self.gameBoard[index].adjacentMineCount == 0 {
+                self.expandAdjacentCells(curPos: pos)
+            }
+        }
     }
     
     /// Update the adjacent mine count after placing a mine at curPos
@@ -112,6 +129,53 @@ class MinesweeperGame: ObservableObject {
         for pos in cell.adjacentPos {
             self.gameBoard[indexAt(pos: pos)].adjacentMineCount += 1
         }
+    }
+    
+    func expandZero() {
+        
+    }
+    
+    func expandNonZero() {
+        
+    }
+    
+    /// 呼叫前已經確認此cell是0
+    func expandAdjacentCells(curPos: Position) {
+        let index = indexAt(pos: curPos)
+        let cell = self.gameBoard[index]
+        
+        // 如果旁邊的地雷數量不是零，則要檢查每一個有地雷的格子都是旗子了
+        if cell.adjacentMineCount != 0 {
+            for pos in cell.adjacentPos {
+                let adjCell = self.gameBoard[indexAt(pos: pos)]
+                // 是炸彈，但是不是旗子
+                if self.minePos.contains(pos) && adjCell.state != .flagged {
+                    // 遊戲結束
+                    self.gameLoss()
+                }
+                
+                adjCell.state = .revealed
+            }
+        } else { // 旁邊的地雷數量是零
+            for pos in cell.adjacentPos {
+                let adjCell = self.gameBoard[indexAt(pos: pos)]
+                
+                adjCell.state = .revealed
+                
+                // 如果周邊還有是零的，一樣繼續展開
+                if adjCell.adjacentMineCount == 0 {
+                    self.expandAdjacentCells(curPos: pos)
+                }
+            }
+        }
+    }
+    
+    func gameLoss() {
+        // 輸了，標示出所有的炸彈位置
+        for pos in self.minePos {
+            self.gameBoard[indexAt(pos: pos)].state = .revealed
+        }
+        self.isGameOver = true
     }
     
     /// Reset the entire game state and clear the board

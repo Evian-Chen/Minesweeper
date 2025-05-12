@@ -79,6 +79,13 @@ struct ContentView: View {
             }
             .padding()
         }
+        .alert("💥 Game Over", isPresented: $minesweeperGame.isGameOver) {
+            Button("Reset Game") {
+                minesweeperGame.resetGame()
+                isStarted = false
+                isFirstClick = true
+            }
+        }
     }
 }
 
