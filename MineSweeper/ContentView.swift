@@ -55,7 +55,7 @@ struct ContentView: View {
 
                 // Display game board and reset button only when game is started
                 if isStarted {
-                    BoardView(MinesweeperGame: minesweeperGame, isFirstClick: $isFirstClick)
+                    BoardView(minesweeperGame: minesweeperGame, isFirstClick: $isFirstClick)
                         .padding(.vertical)
 
                     Button {

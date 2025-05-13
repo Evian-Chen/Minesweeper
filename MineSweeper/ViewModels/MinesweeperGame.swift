@@ -44,7 +44,7 @@ class MinesweeperGame: ObservableObject {
         self.row = row
         self.col = col
 //        self.mineCount = Int.random(in: 1 ..< row * col)
-        self.mineCount = 5  // Test
+        self.mineCount = Int(Double(row * col) * 0.3)
         self.generateBoard()
     }
     
@@ -76,10 +76,26 @@ class MinesweeperGame: ObservableObject {
                 // Make sure pos is inserted then update the adjacent mine count
                 if self.minePos.insert(pos).inserted {
                     self.gameBoard[self.indexAt(pos: pos)].isMine = true
+                    
+                    //
                     self.updateAdjacentMineCount(curPos: pos)
                 }
             }
         }
+    }
+    
+    /// 取得該cell的周邊地雷數
+    func setAdjacentMineCount(cell: Cell) {
+        var count = 0
+        
+        for pos in cell.adjacentPos {
+            let index = self.indexAt(pos: pos)
+            if self.gameBoard[index].isMine {
+                count += 1
+            }
+        }
+        
+        cell.adjacentMineCount = count
     }
     
     // MARK: - Game Logic
@@ -146,7 +162,10 @@ class MinesweeperGame: ObservableObject {
             
             // 如果周邊還有是零的，一樣繼續展開
             if adjCell.state == .hidden {
+                // 打開之後去取得該cell的周邊數量
                 adjCell.state = .revealed
+                self.setAdjacentMineCount(cell: adjCell)
+                
                 if adjCell.adjacentMineCount == 0 {
                     self.expandZero(curPos: pos)
                 }
