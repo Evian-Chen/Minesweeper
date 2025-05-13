@@ -96,10 +96,9 @@ class MinesweeperGame: ObservableObject {
             var _ = self.getMinePos()
             
             self.generateMine(firstPos: pos)
-        } else if self.gameBoard[index].isMine {
-            // game over
         }
         
+        // Debug
         self.printAdjacent(pos: pos)
         print("adjacent mine count: \(self.gameBoard[self.indexAt(pos: pos)].adjacentMineCount)")
         print("all mine count: \(self.mineCount)")
@@ -112,12 +111,16 @@ class MinesweeperGame: ObservableObject {
                 self.gameBoard[index].state = .hidden
             }
         } else {  // click
-            self.gameBoard[index].state = .revealed
-            
             // 如果這格0而且不是地雷，展開四周
             if !self.gameBoard[index].isMine && self.gameBoard[index].adjacentMineCount == 0 {
-                self.expandAdjacentCells(curPos: pos)
+                self.expandZero(curPos: pos)
+            } else if self.gameBoard[index].state == .revealed {  // 在已經是展開的情況下點擊非零的格子
+                self.expandNonZero(curPos: pos)
+            } else if self.gameBoard[index].isMine {
+                self.gameLoss()
             }
+            
+            self.gameBoard[index].state = .revealed
         }
     }
     
@@ -131,44 +134,55 @@ class MinesweeperGame: ObservableObject {
         }
     }
     
-    func expandZero() {
-        
-    }
-    
-    func expandNonZero() {
-        
-    }
-    
-    /// 呼叫前已經確認此cell是0
-    func expandAdjacentCells(curPos: Position) {
+    /// 呼叫前確認這是0
+    func expandZero(curPos: Position) {
         let index = indexAt(pos: curPos)
         let cell = self.gameBoard[index]
         
-        // 如果旁邊的地雷數量不是零，則要檢查每一個有地雷的格子都是旗子了
-        if cell.adjacentMineCount != 0 {
-            for pos in cell.adjacentPos {
-                let adjCell = self.gameBoard[indexAt(pos: pos)]
-                // 是炸彈，但是不是旗子
-                if self.minePos.contains(pos) && adjCell.state != .flagged {
-                    // 遊戲結束
-                    self.gameLoss()
-                }
-                
+        cell.state = .revealed
+        
+        for pos in cell.adjacentPos {
+            let adjCell = self.gameBoard[indexAt(pos: pos)]
+            
+            // 如果周邊還有是零的，一樣繼續展開
+            if adjCell.state == .hidden {
                 adjCell.state = .revealed
-            }
-        } else { // 旁邊的地雷數量是零
-            for pos in cell.adjacentPos {
-                let adjCell = self.gameBoard[indexAt(pos: pos)]
-                
-                adjCell.state = .revealed
-                
-                // 如果周邊還有是零的，一樣繼續展開
                 if adjCell.adjacentMineCount == 0 {
-                    self.expandAdjacentCells(curPos: pos)
+                    self.expandZero(curPos: pos)
                 }
             }
+
         }
     }
+    
+    /// 已經被點開的非零cell，但是插完旗子之後想要展開剩下的格子
+    func expandNonZero(curPos: Position) {
+        let index = indexAt(pos: curPos)
+        let cell = self.gameBoard[index]
+        
+        let flagCount = cell.adjacentPos.filter { pos in
+            self.gameBoard[indexAt(pos: pos)].state == .flagged
+        }.count
+        if flagCount != cell.adjacentMineCount { return }
+        
+        // 確認旗子數量和炸彈數量一樣
+        for pos in cell.adjacentPos {
+            let adjCell = self.gameBoard[indexAt(pos: pos)]
+            // 是炸彈，但是不是旗子
+            if adjCell.state != .flagged && adjCell.isMine {
+                // 遊戲結束
+                self.gameLoss()
+                return
+            }
+            
+            // 差了旗子的狀態還是旗子
+            if adjCell.state == .hidden {
+                adjCell.state = .revealed
+            }
+            
+        }
+    }
+    
     
     func gameLoss() {
         // 輸了，標示出所有的炸彈位置
@@ -181,6 +195,7 @@ class MinesweeperGame: ObservableObject {
     /// Reset the entire game state and clear the board
     func resetGame() {
         self.gameBoard.removeAll()
+        self.minePos.removeAll()
         self.row = 0
         self.col = 0
         self.mineCount = 0
