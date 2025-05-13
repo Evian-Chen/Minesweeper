@@ -26,7 +26,23 @@ class Cell: ObservableObject, Identifiable {
     var adjacentMineCount: Int = 0
     
     /// Indexes of surrounding cell, you can check the surrounding cell by looping through this variable
-    var adjacentPos: [Position] = []
+    var adjacentPos: [Position] {
+        let r = pos.row
+        let c = pos.col
+        
+        var temp: [Position] = []
+        
+        for i in -1 ... 1 {
+            for j in -1 ... 1 {
+                if (0 <= (r + i)) && (r + i) < boardRow && (0 <= (c + j)) && (c + j) < boardCol && !((r + i) == r && (c + j) == c) {
+                    let pos = Position(row: (r + i), col: c + j)
+                    temp.append(pos)
+                }
+            }
+        }
+        
+        return temp
+    }
     
     /// The cell is a mine or not
     @Published var isMine: Bool
@@ -40,25 +56,5 @@ class Cell: ObservableObject, Identifiable {
         self.boardCol = boardCol
         self.isMine = isMine
         self.state = state
-        
-        self.getAdjacentIndex(boardRow: boardRow, boardCol: boardCol)
-    }
-    
-    /// Compute all valid adjacent positions surrounding this cell and store in the adjacentPos, called when initilizing
-    /// - Parameters:
-    ///   - boardRow: total number of rows in the board
-    ///   - boardCol: total number of columns in the board
-    func getAdjacentIndex(boardRow: Int, boardCol: Int) {
-        let r = pos.row
-        let c = pos.col
-        
-        for i in -1 ... 1 {
-            for j in -1 ... 1 {
-                if (0 <= (r + i)) && (r + i) < boardRow && (0 <= (c + j)) && (c + j) < boardCol && !((r + i) == r && (c + j) == c) {
-                    let pos = Position(row: (r + i), col: c + j)
-                    self.adjacentPos.append(pos)
-                }
-            }
-        }
     }
 }

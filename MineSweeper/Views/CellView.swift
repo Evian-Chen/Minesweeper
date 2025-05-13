@@ -18,10 +18,15 @@ struct CellView: View {
     /// Closure triggered when the user taps this cell
     let tapAction: () -> Void
     
+    let longPressAction: () -> Void
+    
+    /// Decide background color of a cell based on its state
     private func backgroundColor(cell: Cell) -> Color {
         if cell.state == .revealed {
             if cell.isMine { return .red }
             else { return .green }
+        } else if cell.state == .flagged {
+            return .yellow
         } else {
             return .gray
         }
@@ -40,10 +45,15 @@ struct CellView: View {
                 } else {
                     Text(String(cell.adjacentMineCount))
                 }
+            } else if cell.state == .flagged {
+                Text("！")
             }
         }
         .onTapGesture {
             tapAction()
+        }
+        .onLongPressGesture {
+            longPressAction()
         }
         .padding(3)
     }
