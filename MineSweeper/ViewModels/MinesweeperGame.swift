@@ -29,6 +29,7 @@ class MinesweeperGame: ObservableObject {
     @Published var gameBoard: [Cell] = []
     
     @Published var isGameOver: Bool = false
+    @Published var isGameWin: Bool = false
     
     // MARK: - Initialization
     
@@ -118,6 +119,9 @@ class MinesweeperGame: ObservableObject {
         self.printAdjacent(pos: pos)
         print("adjacent mine count: \(self.gameBoard[self.indexAt(pos: pos)].adjacentMineCount)")
         print("all mine count: \(self.mineCount)")
+        for pos in self.minePos {
+            print("mine pos:  \(pos.row), \(pos.col)")
+        }
         
         // Handle state change of long press
         if isLongPress {
@@ -137,6 +141,7 @@ class MinesweeperGame: ObservableObject {
             }
             
             self.gameBoard[index].state = .revealed
+            self.gameWin()
         }
     }
     
@@ -209,6 +214,18 @@ class MinesweeperGame: ObservableObject {
             self.gameBoard[indexAt(pos: pos)].state = .revealed
         }
         self.isGameOver = true
+    }
+    
+    func gameWin() {
+        let revealedCount = self.gameBoard.filter { cell in
+            cell.state == .revealed
+        }.count
+        
+        print("revealed count: \(revealedCount)")
+        
+        if revealedCount == self.row * self.col - self.mineCount {
+            self.isGameWin = true
+        }
     }
     
     /// Reset the entire game state and clear the board

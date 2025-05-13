@@ -86,6 +86,13 @@ struct ContentView: View {
                 isFirstClick = true
             }
         }
+        .alert("Game Over", isPresented: $minesweeperGame.isGameWin) {
+            Button("You Win") {
+                minesweeperGame.resetGame()
+                isStarted = false
+                isFirstClick = true
+            }
+        }
     }
 }
 
